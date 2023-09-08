@@ -36,12 +36,6 @@ func New(db database, api pickupAPI, pickupSite string) *Collector {
 	return &Collector{db: db, api: api, pickupSite: pickupSite}
 }
 
-type player struct {
-	steamID int64
-	team    string
-	class   string
-}
-
 func (c *Collector) CollectGames(ctx context.Context) error {
 	offset, err := c.db.GetLastGameID(ctx, c.pickupSite)
 	if err != nil {
@@ -79,21 +73,15 @@ func (c *Collector) processGame(ctx context.Context, game tf2pickup.Result) (err
 		return nil
 	}
 
-	steamIDToPlayer := mapPlayerSlots(game.Slots)
-	steamIDs := lo.Keys(steamIDToPlayer)
+	players := newPlayerSet(game.Slots)
 
-	newSteamIDs, err := c.createNewPlayers(ctx, steamIDs)
+	newSteamIDs, err := c.createNewPlayers(ctx, players.steamIDs)
 	if err != nil {
 		return err
 	}
 
 	newRatings := lo.Map(newSteamIDs, func(steamID int64, _ int) db.PlayerRating {
-		p := steamIDToPlayer[steamID]
-		return db.PlayerRating{
-			SteamID:          p.steamID,
-			Rating:           25.0,
-			UncertaintyValue: 25.0 / 3.0,
-		}
+		return defaultRating(players.bySteamID(steamID))
 	})
 
 	if err = c.db.CreatePlayerRatings(ctx, newRatings, c.pickupSite); err != nil {
@@ -103,24 +91,12 @@ func (c *Collector) processGame(ctx context.Context, game tf2pickup.Result) (err
 	slog.Info("new players created")
 
 	// calculate ratings diffs
-	steamIDRatings, err := c.db.GetPlayerRatingsForSteamIDs(ctx, steamIDs, c.pickupSite)
+	steamIDRatings, err := c.db.GetPlayerRatingsForSteamIDs(ctx, players.steamIDs, c.pickupSite)
 	if err != nil {
 		return err
 	}
 
-	// todo: make a method of steamIDToPlayer
-	var playerRatings = make([]db.PlayerRating, len(steamIDRatings))
-	for i, steamIDRating := range steamIDRatings {
-		p := steamIDToPlayer[steamIDRating.SteamID]
-
-		if p.class != steamIDRating.Class {
-			continue
-		}
-
-		steamIDRating.Team = p.team
-
-		playerRatings[i] = steamIDRating
-	}
+	playerRatings := players.filterRatingsByClass(steamIDRatings)
 
 	teamRatings := lo.GroupBy(playerRatings, func(pr db.PlayerRating) string {
 		return pr.Team
@@ -150,14 +126,14 @@ func (c *Collector) processGame(ctx context.Context, game tf2pickup.Result) (err
 }
 
 func rateTeams(t1, t2 []db.PlayerRating, redScore, bluScore int64) ([]db.PlayerRating, []db.PlayerRating) {
-	redResult, bluResult := gameResults(redScore, bluScore)
-
 	t1Ratings := playerRatingsToOpenSkillTeam(t1)
 	t2Ratings := playerRatingsToOpenSkillTeam(t2)
 
 	teams := openskill.Rate([]openskill.Team{t1Ratings, t2Ratings}, openskill.Options{Scores: []int64{redScore, bluScore}})
 
 	t1Ratings, t2Ratings = teams[0], teams[1]
+
+	redResult, bluResult := gameResults(redScore, bluScore)
 
 	t1 = updateTeamRatings(t1, t1Ratings, redResult)
 	t2 = updateTeamRatings(t2, t2Ratings, bluResult)
@@ -168,6 +144,7 @@ func rateTeams(t1, t2 []db.PlayerRating, redScore, bluScore int64) ([]db.PlayerR
 func updateTeamRatings(team []db.PlayerRating, ratings openskill.Team, result string) []db.PlayerRating {
 	for i, p := range team {
 		playerRatings := ratings[i]
+
 		p.DiffValue = playerRatings.AveragePlayerSkill - p.Rating
 		p.Rating = playerRatings.AveragePlayerSkill
 		p.UncertaintyValue = playerRatings.SkillUncertaintyDegree
@@ -203,16 +180,6 @@ func (c *Collector) createNewPlayers(ctx context.Context, steamIDs []int64) (new
 	}
 
 	return unknownSteamIDs, nil
-}
-
-func mapPlayerSlots(players []tf2pickup.Slot) map[int64]player {
-	return lo.SliceToMap(players, func(s tf2pickup.Slot) (int64, player) {
-		return s.Player.SteamId, player{
-			steamID: s.Player.SteamId,
-			team:    s.Team,
-			class:   s.GameClass,
-		}
-	})
 }
 
 func gameResults(redScore, bluScore int64) (redResult, bluResult string) {

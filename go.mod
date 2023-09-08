@@ -1,6 +1,6 @@
 module github.com/condensedtea/pickup-ratings
 
-go 1.20
+go 1.21
 
 require (
 	github.com/eullerpereira94/openskill v0.5.0
