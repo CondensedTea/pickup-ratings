@@ -1,0 +1,14 @@
+services:
+  postgresql:
+    image: postgres:13
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=pickup-ratings
+    volumes:
+      - "postgresql:/var/lib/postgresql/data/"
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgresql:
+    driver: local
