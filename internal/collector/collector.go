@@ -58,16 +58,17 @@ func (c *Collector) CollectGames(ctx context.Context) error {
 }
 
 func (c *Collector) processGame(ctx context.Context, game tf2pickup.Result) (err error) {
+	// handle ongoing games
+	if game.State == "in progress" {
+		return nil
+	}
+
 	dbGame := db.Game{
 		ID:         game.Number,
 		PickupSite: c.pickupSite,
 		RedScore:   game.Score.Red,
 		BluScore:   game.Score.Blu,
-	}
-
-	// handle ongoing games
-	if game.State == "in progress" {
-		return nil
+		// todo: use game.EndedAt as timestamp in database
 	}
 
 	if err = c.db.SaveGame(ctx, dbGame); err != nil {
@@ -76,6 +77,7 @@ func (c *Collector) processGame(ctx context.Context, game tf2pickup.Result) (err
 
 	// handle broken games
 	if game.State != "ended" {
+		slog.Info("ignored game with broken state", "state", game.State, "game_number", game.Number)
 		return nil
 	}
 
@@ -94,7 +96,7 @@ func (c *Collector) processGame(ctx context.Context, game tf2pickup.Result) (err
 		return err
 	}
 
-	slog.Info("new players created")
+	slog.Debug("new players created")
 
 	// calculate ratings diffs
 	steamIDRatings, err := c.db.GetPlayerRatingsForSteamIDs(ctx, players.steamIDs, c.pickupSite)
@@ -114,19 +116,19 @@ func (c *Collector) processGame(ctx context.Context, game tf2pickup.Result) (err
 
 	ratings := append(newRedRating, newBluRating...)
 
-	slog.Info("new ratings calculated")
+	slog.Debug("new ratings calculated")
 
 	if err = c.db.LogRatingUpdates(ctx, game.Number, c.pickupSite, ratings); err != nil {
 		return err
 	}
 
-	slog.Info("ratings logged")
+	slog.Debug("ratings logged")
 
 	if err = c.db.UpdatePlayerRatings(ctx, ratings); err != nil {
 		return err
 	}
 
-	slog.Info("ratings updated")
+	slog.Debug("ratings updated")
 
 	return nil
 }
