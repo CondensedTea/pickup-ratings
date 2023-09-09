@@ -3,6 +3,8 @@ set positional-arguments
 LOCAL_BIN := invocation_directory() + "/bin"
 LOCAL_DSN := "postgres://postgres:password@localhost:5432/pickup-ratings?sslmode=disable"
 
+export CGO_ENABLED := "0"
+
 default:
   @just --list
 
