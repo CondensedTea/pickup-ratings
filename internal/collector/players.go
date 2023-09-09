@@ -6,9 +6,11 @@ import (
 )
 
 type player struct {
-	steamID int64
-	team    string
-	class   string
+	name      string
+	avatarURL string
+	steamID   int64
+	team      string
+	class     string
 }
 
 type playerSet struct {
@@ -24,9 +26,11 @@ func newPlayerSet(slots []tf2pickup.Slot) playerSet {
 		steamID := slot.Player.SteamId
 		steamIDs[i] = steamID
 		steamIDMapping[steamID] = player{
-			steamID: slot.Player.SteamId,
-			team:    slot.Team,
-			class:   slot.GameClass,
+			name:      slot.Player.Name,
+			avatarURL: slot.Player.Avatar.Small,
+			steamID:   slot.Player.SteamId,
+			team:      slot.Team,
+			class:     slot.GameClass,
 		}
 	}
 
@@ -59,7 +63,7 @@ func (ps playerSet) bySteamID(id int64) player {
 }
 
 func defaultRating(p player) db.PlayerRating {
-	const ratingValue = 25.0
+	const ratingValue = 16.0
 
 	return db.PlayerRating{
 		SteamID:          p.steamID,

@@ -1,0 +1,149 @@
+:root {
+    --header-bg-color: #4d4d93;
+    --body-bg-color: #282536;
+    --link-on-hover-color: #4dffdb;
+}
+
+* {
+    font-family: sans-serif;
+    background: var(--body-bg-color);
+    color: white;
+}
+
+a {
+    text-decoration-line: none;
+}
+
+a:hover {
+    color: var(--link-on-hover-color);
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
+
+header {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    font-size: xx-large;
+    padding-bottom: 0.2em;
+    margin-bottom: 0.2em;
+    width: 100%;
+    background: var(--header-bg-color);
+}
+
+header > .pickup-site-header {
+    display: flex;
+    flex-grow: 0.33;
+    flex-direction: column;
+    padding-left: 0.5em;
+    align-items: flex-start;
+    background: var(--header-bg-color);
+}
+
+header > div > h3 {
+    margin: 0;
+    background: var(--header-bg-color);
+}
+
+header > div > a {
+    display: flex;
+    flex-direction: row;
+    font-size: smaller;
+    background: var(--header-bg-color);
+}
+
+header > a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.6em;
+    font-size: 75%;
+    background: var(--header-bg-color);
+}
+
+table {
+    width: 40%;
+}
+
+tr {
+    display: flex;
+    margin: 0 0 0.5em;
+    align-items: center;
+}
+
+img {
+    padding: 0 0.5em;
+}
+
+tr:nth-of-type(1) > .placement-resize {
+    font-size: xx-large;
+}
+
+tr:nth-of-type(2) > .placement-resize {
+    font-size: x-large;
+}
+
+tr:nth-of-type(3) > .placement-resize {
+    font-size: large;
+}
+
+tr > .position {
+    display: flex;
+    justify-content: center;
+    min-width: 5%;
+}
+
+tr > .player-name {
+    display: flex;
+    overflow: hidden;
+    flex-grow: 3;
+}
+
+.player-link {
+    padding-right: 5px;
+}
+
+.rating {
+    display: flex;
+    min-width: 9ch; /* to suite winrate row 00 / 00 / 00 */
+    align-items: center;
+    flex-direction: column;
+}
+
+.rating-value {
+    font-size: larger;
+}
+
+.games-count {
+    font-size: small;
+    display: flex;
+    flex-direction: row;
+}
+
+.games-count > div {
+    padding: 0 0.3em;
+}
+
+.wins-count {
+    font-weight: bolder;
+    padding-right: 2px;
+    color: limegreen;
+}
+
+.ties-count {
+    font-weight: bolder;
+    padding-left: 2px;
+    color: yellow;
+}
+
+.loss-count {
+    font-weight: bolder;
+    padding-left: 2px;
+    color: red;
+}

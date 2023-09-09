@@ -1,7 +1,12 @@
 package tf2pickup
 
+type Avatar struct {
+	Small string `json:"small"`
+}
+
 type Player struct {
 	Name           string `json:"name"`
+	Avatar         Avatar `json:"avatar"`
 	SteamId        int64  `json:"steamId,string"`
 	Etf2LProfileId int    `json:"etf2lProfileId"`
 }

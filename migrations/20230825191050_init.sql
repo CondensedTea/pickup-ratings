@@ -17,7 +17,9 @@ create table player_leaderboard (
 
     rating float4 not null,
     uncertainty_value float4 not null,
-    games_played bigint default 1
+    games_played bigint default 0,
+    games_tied bigint default 0,
+    games_won bigint default 0
 );
 
 create table player_rating_history (

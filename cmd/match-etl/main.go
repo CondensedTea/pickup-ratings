@@ -33,7 +33,7 @@ func main() {
 
 	dbClient, err := db.NewClient(ctx, dbDsn)
 	if err != nil {
-		log.Fatalf("failed to init db client: %w", err)
+		log.Fatalf("failed to init db client: %s", err)
 	}
 
 	pickupApi := tf2pickup.NewClient(pickupSite, 150, http.DefaultTransport)
@@ -43,7 +43,6 @@ func main() {
 	slog.Info("collecting games")
 
 	if err = c.CollectGames(ctx); err != nil {
-		slog.Error("failed to run collector", "error", err)
-		os.Exit(1)
+		log.Fatalf("failed to run collector: %s", err)
 	}
 }

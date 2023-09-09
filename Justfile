@@ -12,12 +12,12 @@ install-deps:
 _build-match-etl:
     go build -o bin/match-etl ./cmd/match-etl
 
-_build-player-etl:
-    go build -o bin/player-etl ./cmd/player-etl
+_build-pickup-ratings:
+    go build -o bin/pickup-ratings ./cmd/pickup-ratings
 
 # Build binaries
-build: _build-match-etl
-#_build-player-etl
+build: _build-match-etl _build-pickup-ratings
+
 
 test:
     echo {{ file_name("cmd/player-etl") }}

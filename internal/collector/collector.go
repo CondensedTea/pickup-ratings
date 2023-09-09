@@ -13,7 +13,7 @@ import (
 type database interface {
 	GetLastGameID(ctx context.Context, pickupSite string) (int, error)
 	GetUnknownSteamIDs(ctx context.Context, steamIDs []int64, pickupSite string) ([]int64, error)
-	CreatePlayersBatch(ctx context.Context, steamIDs []int64, pickupSite string) error
+	CreatePlayersBatch(ctx context.Context, players []db.Player, pickupSite string) error
 	SaveGame(ctx context.Context, game db.Game) error
 	CreatePlayerRatings(ctx context.Context, ratings []db.PlayerRating, pickupSite string) error
 	GetPlayerRatingsForSteamIDs(ctx context.Context, steamIDs []int64, pickupSite string) ([]db.PlayerRating, error)
@@ -65,17 +65,23 @@ func (c *Collector) processGame(ctx context.Context, game tf2pickup.Result) (err
 		BluScore:   game.Score.Blu,
 	}
 
+	// handle ongoing games
+	if game.State == "in progress" {
+		return nil
+	}
+
 	if err = c.db.SaveGame(ctx, dbGame); err != nil {
 		return err
 	}
 
-	if game.State == "interrupted" {
+	// handle broken games
+	if game.State != "ended" {
 		return nil
 	}
 
 	players := newPlayerSet(game.Slots)
 
-	newSteamIDs, err := c.createNewPlayers(ctx, players.steamIDs)
+	newSteamIDs, err := c.createNewPlayers(ctx, players)
 	if err != nil {
 		return err
 	}
@@ -151,6 +157,13 @@ func updateTeamRatings(team []db.PlayerRating, ratings openskill.Team, result st
 		p.Result = result
 		p.GamesPlayed++
 
+		switch result {
+		case "win":
+			p.GamesWon++
+		case "tie":
+			p.GamesTied++
+		}
+
 		team[i] = p
 	}
 
@@ -169,13 +182,24 @@ func playerRatingsToOpenSkillTeam(team []db.PlayerRating) openskill.Team {
 	return openskill.NewTeam(ratings...)
 }
 
-func (c *Collector) createNewPlayers(ctx context.Context, steamIDs []int64) (newSteamIDs []int64, err error) {
-	unknownSteamIDs, err := c.db.GetUnknownSteamIDs(ctx, steamIDs, c.pickupSite)
+func (c *Collector) createNewPlayers(ctx context.Context, players playerSet) (newSteamIDs []int64, err error) {
+	unknownSteamIDs, err := c.db.GetUnknownSteamIDs(ctx, players.steamIDs, c.pickupSite)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = c.db.CreatePlayersBatch(ctx, unknownSteamIDs, c.pickupSite); err != nil {
+	var dbPlayers = make([]db.Player, len(unknownSteamIDs))
+	for i, steamID := range unknownSteamIDs {
+		p := players.bySteamID(steamID)
+		dbPlayers[i] = db.Player{
+			Name:       p.name,
+			AvatarURL:  p.avatarURL,
+			SteamID:    p.steamID,
+			PickupSite: c.pickupSite,
+		}
+	}
+
+	if err = c.db.CreatePlayersBatch(ctx, dbPlayers, c.pickupSite); err != nil {
 		return nil, err
 	}
 

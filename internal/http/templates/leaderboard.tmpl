@@ -1,0 +1,23 @@
+<html lang="en">
+    <head>
+        <title>{{ .PickupSite }} leaderboard</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width" />
+        <link rel="stylesheet" href="assets/styles.css">
+    </head>
+    <body>
+        {{ template "templates/header" . }}
+
+        <header>
+            <div class="pickup-site-header">
+                <h3>Leaderboards</h3>
+                <a href="https://{{.PickupSite}}">{{ .PickupSite }}</a>
+            </div>
+            <a href="{{ .PickupSite }}?class=scout">Scout</a>
+            <a href="{{ .PickupSite }}?class=soldier">Soldier</a>
+            <a href="{{ .PickupSite }}?class=medic">Medic</a>
+            <a href="{{ .PickupSite }}?class=demoman">Demoman</a>
+        </header>
+        {{ template "templates/ratings-table" . }}
+    </body>
+</html>
