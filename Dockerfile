@@ -1,4 +1,4 @@
-FROM debian:12
+FROM golang:1.21-bullseye
 
 COPY /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
