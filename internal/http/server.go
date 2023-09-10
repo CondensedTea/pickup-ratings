@@ -13,7 +13,7 @@ import (
 
 const (
 	defaultPickupSite  = "tf2pickup.ru"
-	defaultPlayerClass = "soldier"
+	defaultPlayerClass = "scout"
 )
 
 //go:embed templates/*
@@ -23,6 +23,7 @@ var templateFS embed.FS
 var assetFS embed.FS
 
 type database interface {
+	GetAvailablePickupSites(ctx context.Context) ([]string, error)
 	GetLeaderboardForClass(ctx context.Context, playerClass, pickupSite string, offset, limit int) ([]db.LeaderboardEntry, error)
 }
 
@@ -53,5 +54,5 @@ func NewServer(db database) *Server {
 }
 
 func (s *Server) Run(port string) error {
-	return s.app.Listen(":" + port)
+	return s.app.Listen("localhost:" + port)
 }

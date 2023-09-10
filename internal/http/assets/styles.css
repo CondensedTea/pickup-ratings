@@ -31,30 +31,33 @@ header {
     flex-direction: row;
     flex-wrap: wrap;
     font-size: xx-large;
-    padding-bottom: 0.2em;
+    justify-content: center;
     margin-bottom: 0.2em;
     width: 100%;
     background: var(--header-bg-color);
 }
 
-header > .pickup-site-header {
-    display: flex;
-    flex-grow: 0.33;
-    flex-direction: column;
-    padding-left: 0.5em;
-    align-items: flex-start;
-    background: var(--header-bg-color);
-}
-
-header > div > h3 {
-    margin: 0;
-    background: var(--header-bg-color);
-}
-
-header > div > a {
+.pickup-site-header {
     display: flex;
     flex-direction: row;
-    font-size: smaller;
+    padding-left: 0.5em;
+    align-items: center;
+    background: var(--header-bg-color);
+}
+
+.pickup-site-header {
+    width: 100%;
+    background: var(--header-bg-color);
+}
+
+.pickup-site-header > h3 {
+    margin: 0;
+    padding: 0.5em 1em;
+    background: var(--header-bg-color);
+}
+
+.pickup-site-header > a {
+    padding: 0 2em;
     background: var(--header-bg-color);
 }
 
@@ -62,7 +65,7 @@ header > a {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0.6em;
+    padding: 0.6em 0.3em;
     font-size: 75%;
     background: var(--header-bg-color);
 }

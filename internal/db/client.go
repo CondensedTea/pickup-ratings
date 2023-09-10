@@ -287,3 +287,14 @@ func (c *Client) GetLeaderboardForClass(ctx context.Context, playerClass, pickup
 
 	return results, nil
 }
+
+func (c *Client) GetAvailablePickupSites(ctx context.Context) ([]string, error) {
+	const query = `select distinct pickup_site from game_history`
+
+	rows, err := c.pool.Query(ctx, query)
+	if err != nil {
+		return nil, nil
+	}
+
+	return pgx.CollectRows(rows, pgx.RowTo[string])
+}

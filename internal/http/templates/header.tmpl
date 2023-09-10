@@ -1,1 +1,6 @@
-
+<div class="pickup-site-header">
+    <h3>{{ .PageTitle }}</h3>
+    {{ range $site := .AvailableSites }}
+        <a href="/{{ . }}">{{ . }}</a>
+    {{ end }}
+</div>

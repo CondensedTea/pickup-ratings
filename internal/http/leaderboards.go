@@ -28,6 +28,11 @@ func (s *Server) leaderboardsPage(ctx *fiber.Ctx) error {
 	pickupSite := ctx.Params("pickupSite", defaultPickupSite)
 	gameClass := ctx.Query("class", defaultPlayerClass)
 
+	availableSites, err := s.db.GetAvailablePickupSites(ctx.Context())
+	if err != nil {
+		return fmt.Errorf("failed to get availible pickup sites: %w", err)
+	}
+
 	leaderboardEntries, err := s.db.GetLeaderboardForClass(ctx.Context(), gameClass, pickupSite, 0, 50)
 	if err != nil {
 		return err
@@ -49,7 +54,9 @@ func (s *Server) leaderboardsPage(ctx *fiber.Ctx) error {
 	})
 
 	return ctx.Render("templates/leaderboard", fiber.Map{
-		"PickupSite": pickupSite,
-		"Ratings":    ratings,
+		"PageTitle":      "Leaderboards",
+		"PickupSite":     pickupSite,
+		"AvailableSites": availableSites,
+		"Ratings":        ratings,
 	})
 }
