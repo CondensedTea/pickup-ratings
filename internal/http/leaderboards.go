@@ -2,7 +2,6 @@ package http
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/condensedtea/pickup-ratings/internal/db"
 	"github.com/gofiber/fiber/v2"
@@ -44,7 +43,7 @@ func (s *Server) leaderboardsPage(ctx *fiber.Ctx) error {
 			AvatarURL: e.AvatarURL,
 			Name:      e.Name,
 			SteamID:   e.SteamID,
-			Rating:    fmt.Sprintf("%.0f", math.Round(e.Rating*100)),
+			Rating:    ratingLabel(e.Rating),
 			Winrate: winrate{
 				Wins:   int(e.GamesWon),
 				Ties:   int(e.GamesTied),
@@ -53,7 +52,7 @@ func (s *Server) leaderboardsPage(ctx *fiber.Ctx) error {
 		}
 	})
 
-	return ctx.Render("templates/leaderboard", fiber.Map{
+	return ctx.Render("templates/leaderboards", fiber.Map{
 		"PageTitle":      "Leaderboards",
 		"PickupSite":     pickupSite,
 		"AvailableSites": availableSites,

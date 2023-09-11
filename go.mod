@@ -8,6 +8,7 @@ require (
 	github.com/gofiber/template/html/v2 v2.0.5
 	github.com/jackc/pgx/v5 v5.4.3
 	github.com/samber/lo v1.38.1
+	github.com/spf13/pflag v1.0.5
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
 )
 

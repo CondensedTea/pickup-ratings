@@ -4,13 +4,8 @@
     --link-on-hover-color: #4dffdb;
 }
 
-* {
-    font-family: sans-serif;
-    background: var(--body-bg-color);
-    color: white;
-}
-
 a {
+    color: white;
     text-decoration-line: none;
 }
 
@@ -19,6 +14,10 @@ a:hover {
 }
 
 body {
+    font-family: sans-serif;
+    color: white;
+    background: var(--body-bg-color);
+
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -27,6 +26,8 @@ body {
 }
 
 header {
+    font-family: sans-serif;
+    color: white;
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -114,7 +115,7 @@ tr > .player-name {
 
 .rating {
     display: flex;
-    min-width: 9ch; /* to suite winrate row 00 / 00 / 00 */
+    min-width: 9ch;
     align-items: center;
     flex-direction: column;
 }
@@ -133,20 +134,50 @@ tr > .player-name {
     padding: 0 0.3em;
 }
 
-.wins-count {
+.game-id {
+    padding: 0.5em;
+}
+
+.game-map {
+    display: flex;
+    flex-grow: 1.5;
+}
+
+.game-result {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    margin: 0 0.5em;
+
+    white-space: nowrap;
+}
+
+.timestamp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 0.5em;
+}
+
+.win-label {
     font-weight: bolder;
     padding-right: 2px;
     color: limegreen;
 }
 
-.ties-count {
+.tie-label {
     font-weight: bolder;
     padding-left: 2px;
     color: yellow;
 }
 
-.loss-count {
+.loss-label {
     font-weight: bolder;
     padding-left: 2px;
     color: red;
+}
+
+.results-footer {
+    padding-bottom: 5%;
 }

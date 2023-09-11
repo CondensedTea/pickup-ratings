@@ -1,0 +1,38 @@
+<html lang="en">
+    <head>
+        <title>{{ .PageTitle }} | {{ .PickupSite }}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width" />
+        <link rel="stylesheet" href="/assets/styles.css">
+    </head>
+    <body>
+    {{ template "templates/header" . }}
+
+    <header>
+        <a href="/{{ $.PickupSite }}/player/{{ .SteamID }}?class=scout">Scout</a>
+        <a href="/{{ $.PickupSite }}/player/{{ .SteamID }}?class=soldier">Soldier</a>
+        <a href="/{{ $.PickupSite }}/player/{{ .SteamID }}?class=demoman">Demoman</a>
+        <a href="/{{ $.PickupSite }}/player/{{ .SteamID }}?class=medic">Medic</a>
+    </header>
+
+    <table class="rating-history">
+        {{ range $row := .RatingEntries }}
+            <tr>
+                <td class="game-id">
+                    #<a href="https://{{ $.PickupSite }}/game/{{ .PickupID }}">{{ .GameID }}</a>
+                </td>
+                <td class="game-map">{{ .Map }}</td>
+                <td class="game-result">
+                    <div class="{{ .Result }}-label">{{ .RedScore }} - {{ .BluScore }}</div>
+                    {{ .Rating }} ({{ .RatingDiff }})
+                </td>
+                <td class="timestamp">
+                    <div>{{ .Date }}</div>
+                    <div>{{ .Time }}</div>
+                </td>
+            </tr>
+        {{ end }}
+    </table>
+    <div class="results-footer">Total {{ len .RatingEntries  }} results</div>
+</body>
+</html>

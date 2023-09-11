@@ -18,11 +18,13 @@ type Slot struct {
 }
 
 type Result struct {
-	Id     string `json:"id"`
-	Number int64  `json:"number"`
-	Slots  []Slot `json:"slots"`
-	State  string `json:"state"`
-	Score  Score  `json:"score"`
+	Id      string `json:"id"`
+	Map     string `json:"map"`
+	EndedAt string `json:"endedAt"`
+	Number  int64  `json:"number"`
+	Slots   []Slot `json:"slots"`
+	State   string `json:"state"`
+	Score   Score  `json:"score"`
 }
 
 type Score struct {

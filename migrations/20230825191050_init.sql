@@ -27,7 +27,7 @@ create table player_rating_history (
     game_id int not null,
 	pickup_site text not null,
     leaderboard_id bigint not null,
-    rating_diff float4 not null,
+    rating_value float4 not null,
     result text not null,
     ts timestamp default now()
 );
@@ -35,10 +35,12 @@ create table player_rating_history (
 -- info about single game on given pickup site
 create table game_history (
     game_id int not null,
+    game_map text not null,
 	pickup_site text not null,
 	blu_score int not null,
     red_score int not null,
 	ts timestamp default now(),
+	pickup_id text not null,
 
 	primary key (game_id, pickup_site)
 );

@@ -26,7 +26,7 @@ func NewClient(pickupURL string, pageSize int, tr http.RoundTripper) *Client {
 	}
 }
 
-func (c *Client) LoadNewGames(ctx context.Context, startingOffset int) ([]Result, error) {
+func (c *Client) LoadNewGames(ctx context.Context, startingOffset, limit int) ([]Result, error) {
 	var totalResults []Result
 
 	for i := startingOffset; ; i += c.pageSize {
@@ -43,7 +43,9 @@ func (c *Client) LoadNewGames(ctx context.Context, startingOffset int) ([]Result
 			"total_results", len(totalResults),
 		)
 
-		if len(results) < c.pageSize || results[len(results)-1].Number == resultCount {
+		isLastGamePlayed := results[len(results)-1].Number == resultCount
+
+		if len(totalResults) >= limit || isLastGamePlayed {
 			return totalResults, nil
 		}
 	}

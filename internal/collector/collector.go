@@ -2,10 +2,12 @@ package collector
 
 import (
 	"context"
+	"errors"
 
 	"github.com/condensedtea/pickup-ratings/internal/db"
 	"github.com/condensedtea/pickup-ratings/internal/tf2pickup"
 	"github.com/eullerpereira94/openskill"
+	"github.com/jackc/pgx/v5"
 	"github.com/samber/lo"
 	"golang.org/x/exp/slog"
 )
@@ -17,12 +19,12 @@ type database interface {
 	SaveGame(ctx context.Context, game db.Game) error
 	CreatePlayerRatings(ctx context.Context, ratings []db.PlayerRating, pickupSite string) error
 	GetPlayerRatingsForSteamIDs(ctx context.Context, steamIDs []int64, pickupSite string) ([]db.PlayerRating, error)
-	LogRatingUpdates(ctx context.Context, gameID int64, pickupSite string, ratings []db.PlayerRating) error
+	LogRatingUpdates(ctx context.Context, gameID int64, pickupSite string, ratings []db.PlayerRating, ts string) error
 	UpdatePlayerRatings(ctx context.Context, ratings []db.PlayerRating) error
 }
 
 type pickupAPI interface {
-	LoadNewGames(ctx context.Context, offset int) ([]tf2pickup.Result, error)
+	LoadNewGames(ctx context.Context, offset, limit int) ([]tf2pickup.Result, error)
 }
 
 type Collector struct {
@@ -38,11 +40,14 @@ func New(db database, api pickupAPI, pickupSite string) *Collector {
 
 func (c *Collector) CollectGames(ctx context.Context) error {
 	offset, err := c.db.GetLastGameID(ctx, c.pickupSite)
-	if err != nil {
+	if errors.Is(err, pgx.ErrNoRows) {
+		// if no game recorded
+		offset = 0
+	} else if err != nil {
 		return err
 	}
 
-	games, err := c.api.LoadNewGames(ctx, offset)
+	games, err := c.api.LoadNewGames(ctx, offset, 1000)
 	if err != nil {
 		return err
 	}
@@ -65,10 +70,12 @@ func (c *Collector) processGame(ctx context.Context, game tf2pickup.Result) (err
 
 	dbGame := db.Game{
 		ID:         game.Number,
+		Map:        game.Map,
 		PickupSite: c.pickupSite,
 		RedScore:   game.Score.Red,
 		BluScore:   game.Score.Blu,
-		// todo: use game.EndedAt as timestamp in database
+		Ts:         game.EndedAt,
+		PickupID:   game.Id,
 	}
 
 	if err = c.db.SaveGame(ctx, dbGame); err != nil {
@@ -118,7 +125,7 @@ func (c *Collector) processGame(ctx context.Context, game tf2pickup.Result) (err
 
 	slog.Debug("new ratings calculated")
 
-	if err = c.db.LogRatingUpdates(ctx, game.Number, c.pickupSite, ratings); err != nil {
+	if err = c.db.LogRatingUpdates(ctx, game.Number, c.pickupSite, ratings, dbGame.Ts); err != nil {
 		return err
 	}
 
@@ -153,7 +160,6 @@ func updateTeamRatings(team []db.PlayerRating, ratings openskill.Team, result st
 	for i, p := range team {
 		playerRatings := ratings[i]
 
-		p.DiffValue = playerRatings.AveragePlayerSkill - p.Rating
 		p.Rating = playerRatings.AveragePlayerSkill
 		p.UncertaintyValue = playerRatings.SkillUncertaintyDegree
 		p.Result = result

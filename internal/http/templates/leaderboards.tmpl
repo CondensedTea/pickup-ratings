@@ -1,0 +1,49 @@
+<html lang="en">
+    <head>
+        <title>{{ .PageTitle }} | {{ .PickupSite }}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width" />
+        <link rel="stylesheet" href="/assets/styles.css">
+    </head>
+    <body>
+        {{ template "templates/header" . }}
+
+        <header>
+            <a href="{{ .PickupSite }}?class=scout">Scout</a>
+            <a href="{{ .PickupSite }}?class=soldier">Soldier</a>
+            <a href="{{ .PickupSite }}?class=demoman">Demoman</a>
+            <a href="{{ .PickupSite }}?class=medic">Medic</a>
+        </header>
+        <table class="ratings-table">
+            {{ range $row := .Ratings }}
+                <tr>
+                    <td class="position">
+                        {{ .Position }}
+                    </td>
+                    <td>
+                        <img alt="{{ $row.Name }}'s avatar" src="{{ $row.AvatarURL }}">
+                    </td>
+                    <td class="player-name placement-resize">
+                        <a class="player-link" href="/{{ $.PickupSite }}/player/{{ $row.SteamID }}">{{ $row.Name }}</a>
+                    </td>
+                    <td class="rating">
+                        <div class="rating-value">{{ $row.Rating }}</div>
+                        <div class="games-count">
+                            <div class="win-label">
+                                {{ .Winrate.Wins }}
+                            </div>
+                            /
+                            <div class="tie-label">
+                                {{ .Winrate.Ties }}
+                            </div>
+                            /
+                            <div class="loss-label">
+                                {{ .Winrate.Losses }}
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            {{ end }}
+        </table>
+    </body>
+</html>

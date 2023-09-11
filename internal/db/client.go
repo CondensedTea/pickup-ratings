@@ -20,11 +20,12 @@ type Player struct {
 
 type Game struct {
 	ID         int64
+	Map        string
 	PickupSite string
-
-	BluScore int64
-
-	RedScore int64
+	BluScore   int64
+	RedScore   int64
+	Ts         string
+	PickupID   string
 }
 
 type PlayerRating struct {
@@ -33,7 +34,6 @@ type PlayerRating struct {
 
 	Rating           float64
 	UncertaintyValue float64
-	DiffValue        float64 `db:"-"`
 	Result           string
 	GamesPlayed      int64
 	GamesTied        int64
@@ -44,12 +44,15 @@ type PlayerRating struct {
 }
 
 type RatingUpdate struct {
-	ID         int64
-	GameID     int64
-	PickupSite string
-
-	PlayerSteamID int64
-	PlayerClass   string
+	GameID   int64
+	PickupID string
+	GameMap  string
+	Rating   float64
+	Result   string
+	RedScore int64
+	BluScore int64
+	Date     string
+	Time     string
 }
 
 type Client struct {
@@ -66,7 +69,7 @@ func NewClient(ctx context.Context, dsn string) (*Client, error) {
 }
 
 func (c *Client) GetLastGameID(ctx context.Context, pickupSite string) (int, error) {
-	const query = `select game_id from game_history where pickup_site = $1 order by ts desc limit 1`
+	const query = `select game_id from game_history where pickup_site = $1 order by game_id desc limit 1`
 
 	var gameID int
 	if err := c.pool.QueryRow(ctx, query, pickupSite).Scan(&gameID); err != nil {
@@ -138,9 +141,10 @@ func (c *Client) CreatePlayersBatch(ctx context.Context, players []Player, picku
 }
 
 func (c *Client) SaveGame(ctx context.Context, game Game) error {
-	const query = `insert into game_history(game_id, pickup_site, red_score, blu_score) values ($1, $2, $3, $4)`
+	const query = `insert into game_history(game_id, game_map, pickup_site, red_score, blu_score, ts, pickup_id)
+					values ($1, $2, $3, $4, $5, $6, $7)`
 
-	_, err := c.pool.Exec(ctx, query, game.ID, game.PickupSite, game.RedScore, game.BluScore)
+	_, err := c.pool.Exec(ctx, query, game.ID, game.Map, game.PickupSite, game.RedScore, game.BluScore, game.Ts, game.PickupID)
 	if err != nil {
 		return fmt.Errorf("SaveGame: %w", err)
 	}
@@ -197,13 +201,13 @@ func (c *Client) GetPlayerRatingsForSteamIDs(ctx context.Context, steamIDs []int
 	}), nil
 }
 
-func (c *Client) LogRatingUpdates(ctx context.Context, gameID int64, pickupSite string, ratings []PlayerRating) error {
-	const query = `insert into player_rating_history(game_id, pickup_site, leaderboard_id, rating_diff, result) values ($1, $2, $3, $4, $5)`
+func (c *Client) LogRatingUpdates(ctx context.Context, gameID int64, pickupSite string, ratings []PlayerRating, ts string) error {
+	const query = `insert into player_rating_history(game_id, pickup_site, leaderboard_id, rating_value, result, ts) values ($1, $2, $3, $4, $5, $6)`
 
 	var b = &pgx.Batch{}
 
 	for _, r := range ratings {
-		b.Queue(query, gameID, pickupSite, r.ID, r.DiffValue, r.Result)
+		b.Queue(query, gameID, pickupSite, r.ID, r.Rating, r.Result, ts)
 	}
 
 	br := c.pool.SendBatch(ctx, b)
@@ -297,4 +301,42 @@ func (c *Client) GetAvailablePickupSites(ctx context.Context) ([]string, error) 
 	}
 
 	return pgx.CollectRows(rows, pgx.RowTo[string])
+}
+
+func (c *Client) GetPlayerRatingHistoryForClass(ctx context.Context, steamID int64, class string) ([]RatingUpdate, error) {
+	const query = `
+		select
+			gh.game_id,
+			gh.pickup_id,
+			gh.game_map,
+			rating_value,
+			result,
+			gh.red_score,
+			gh.blu_score,
+			to_char(rh.ts, 'YYYY/MM/DD'),
+			to_char(rh.ts, 'HH24:MM:SS')
+		from player_rating_history rh
+		join player_leaderboard pl on rh.leaderboard_id = pl.id
+		join game_history gh on rh.game_id = gh.game_id
+		where
+			player_steam_id = $1 and player_class = $2
+		order by rh.ts`
+
+	rows, err := c.pool.Query(ctx, query, steamID, class)
+	if err != nil {
+		return nil, fmt.Errorf("GetPlayerRatingHistoryForClass: quering rows: %w", err)
+	}
+
+	return pgx.CollectRows(rows, pgx.RowToStructByPos[RatingUpdate])
+}
+
+func (c *Client) GetPlayerName(ctx context.Context, pickupSite string, steamID int64) (string, error) {
+	const query = `select name from players where pickup_site = $1 and steam_id = $2`
+
+	var playerName string
+	if err := c.pool.QueryRow(ctx, query, pickupSite, steamID).Scan(&playerName); err != nil {
+		return "", fmt.Errorf("GetPlayerName: quering rows: %w", err)
+	}
+
+	return playerName, nil
 }

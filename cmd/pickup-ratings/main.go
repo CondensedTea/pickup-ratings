@@ -17,9 +17,9 @@ func main() {
 		log.Fatal(err)
 	}
 
-	s := http.NewServer(dbClient)
+	server := http.NewServer(dbClient)
 
-	if err = s.Run(os.Getenv("PORT")); err != nil {
+	if err = server.Run(os.Getenv("PORT")); err != nil {
 		log.Fatalf("failed to run server: %s", err)
 	}
 }
