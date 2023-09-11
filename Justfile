@@ -32,3 +32,9 @@ local-down:
 
 local-migrate *args='': install-deps
     ./bin/goose -dir=migrations/ postgres {{ LOCAL_DSN }} "$@"
+
+match-etl *args:
+    DB_DSN={{ LOCAL_DSN }} go run ./cmd/match-etl $@
+
+start:
+    DB_DSN={{ LOCAL_DSN }} go run ./cmd/pickup-ratings

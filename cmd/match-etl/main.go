@@ -18,13 +18,17 @@ import (
 )
 
 var (
-	pickupSite    string
-	gamesPageSize int
+	pickupSite     string
+	gamesPageSize  int
+	startingOffset int
+	gameLimit      int
 )
 
 func main() {
 	flag.StringVar(&pickupSite, "pickup-site", "", "Host of the pickup site to load games from")
 	flag.IntVar(&gamesPageSize, "games-page-size", 200, "Amount of games per page for API requests")
+	flag.IntVar(&startingOffset, "offset", 0, "First game number to load if there is no games for pickup site")
+	flag.IntVar(&gameLimit, "max-games", 1000, "Max number of games loaded in single run")
 	flag.Parse()
 
 	if pickupSite == "" {
@@ -52,7 +56,7 @@ func main() {
 
 	slog.Info("collecting games")
 
-	if err = c.CollectGames(ctx); err != nil {
+	if err = c.CollectGames(ctx, startingOffset, gameLimit); err != nil {
 		log.Fatalf("failed to run collector: %s", err)
 	}
 }

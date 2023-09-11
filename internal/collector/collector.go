@@ -38,16 +38,16 @@ func New(db database, api pickupAPI, pickupSite string) *Collector {
 	return &Collector{db: db, api: api, pickupSite: pickupSite}
 }
 
-func (c *Collector) CollectGames(ctx context.Context) error {
+func (c *Collector) CollectGames(ctx context.Context, startingOffset, gameLimit int) error {
 	offset, err := c.db.GetLastGameID(ctx, c.pickupSite)
 	if errors.Is(err, pgx.ErrNoRows) {
 		// if no game recorded
-		offset = 0
+		offset = startingOffset
 	} else if err != nil {
 		return err
 	}
 
-	games, err := c.api.LoadNewGames(ctx, offset, 1000)
+	games, err := c.api.LoadNewGames(ctx, offset, gameLimit)
 	if err != nil {
 		return err
 	}
