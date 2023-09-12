@@ -43,9 +43,14 @@ func (c *Client) LoadNewGames(ctx context.Context, startingOffset, limit int) ([
 			"total_results", len(totalResults),
 		)
 
-		isLastGamePlayed := results[len(results)-1].Number == resultCount
+		var isLastGamePlayed bool
+		if len(results) == 0 {
+			isLastGamePlayed = true
+		} else {
+			isLastGamePlayed = results[len(results)-1].Number == resultCount
+		}
 
-		if len(totalResults) >= limit || isLastGamePlayed {
+		if isLastGamePlayed || len(totalResults) >= limit {
 			return totalResults, nil
 		}
 	}
