@@ -64,7 +64,7 @@ func (c *Collector) CollectGames(ctx context.Context, startingOffset, gameLimit 
 
 func (c *Collector) processGame(ctx context.Context, game tf2pickup.Result) (err error) {
 	// handle ongoing games
-	if game.State == "in progress" {
+	if game.State == "started" {
 		return nil
 	}
 
